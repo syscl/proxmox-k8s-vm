@@ -142,3 +142,9 @@ variable "extra_tags" {
   type        = list(string)
   default     = []
 }
+
+variable "user_data_file_id" {
+  description = "File ID of a cloud-init user-data snippet applied to every node in the cluster."
+  type        = string
+  default     = null
+}

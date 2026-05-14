@@ -79,6 +79,12 @@ variable "ci_datastore_id" {
   default     = null
 }
 
+variable "snippet_datastore_id" {
+  description = "Datastore that supports 'Snippets' content (used for cloud-init user-data). Typically 'local'."
+  type        = string
+  default     = "local"
+}
+
 ############################
 # Common cluster defaults
 ############################

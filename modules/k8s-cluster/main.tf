@@ -75,6 +75,7 @@ module "control_plane" {
   ssh_username    = var.ssh_username
   ssh_public_keys = var.ssh_public_keys
 
+  user_data_file_id  = var.user_data_file_id
   machine_type       = var.machine_type
   bios               = var.bios
   qemu_agent_enabled = var.qemu_agent_enabled
@@ -110,6 +111,7 @@ module "workers" {
   ssh_username    = var.ssh_username
   ssh_public_keys = var.ssh_public_keys
 
+  user_data_file_id  = var.user_data_file_id
   machine_type       = var.machine_type
   bios               = var.bios
   qemu_agent_enabled = var.qemu_agent_enabled

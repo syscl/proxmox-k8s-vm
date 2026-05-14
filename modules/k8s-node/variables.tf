@@ -128,6 +128,12 @@ variable "ci_datastore_id" {
   default     = null
 }
 
+variable "user_data_file_id" {
+  description = "File ID of a cloud-init user-data snippet (proxmox_virtual_environment_file). null = no user-data."
+  type        = string
+  default     = null
+}
+
 variable "start_on_boot" {
   description = "Auto-start the VM when the Proxmox host boots."
   type        = bool
