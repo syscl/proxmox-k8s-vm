@@ -102,6 +102,9 @@ echo ""
 
 # Point -i at the directory so Ansible picks up group_vars/ automatically.
 # https://github.com/kubernetes-sigs/kubespray/blob/master/docs/getting_started/getting-started.md
+ANSIBLE_ROLES_PATH="$KUBESPRAY_DIR/roles" \
+ANSIBLE_COLLECTIONS_PATH="$KUBESPRAY_DIR/collections" \
+ANSIBLE_HOST_KEY_CHECKING=False \
 ansible-playbook "$KUBESPRAY_DIR/cluster.yml" \
     -i "$INVENTORY_DIR/" \
     -u debian \
