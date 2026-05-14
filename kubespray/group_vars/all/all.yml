@@ -1,0 +1,14 @@
+# Common variables applied to all hosts in the cluster.
+# See kubespray/inventory/sample/group_vars/all/all.yml for the full reference.
+
+# SSH user provisioned by cloud-init (must match ssh_username in tofu tfvars).
+ansible_user: debian
+ansible_become: true
+
+# Disable firewalld/ufw — k8s manages iptables rules itself.
+disable_swap: true
+
+# Upstream DNS for CoreDNS inside the cluster.
+upstream_dns_servers:
+  - 1.1.1.1
+  - 8.8.8.8

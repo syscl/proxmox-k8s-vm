@@ -1,0 +1,18 @@
+# Cluster addons managed by Kubespray.
+# See kubespray/inventory/sample/group_vars/k8s_cluster/addons.yml for the full reference.
+
+# Helm — install tiller-less helm binary on control plane.
+helm_enabled: true
+
+# Nginx ingress controller (set to true when you need it).
+ingress_nginx_enabled: false
+
+# MetalLB (bare-metal load balancer — useful for on-prem/Proxmox).
+# Enable and configure an IP range from your LAN when ready.
+metallb_enabled: false
+# metallb_ip_range:
+#   - "192.168.1.200-192.168.1.220"
+# metallb_protocol: layer2
+
+# cert-manager (TLS certificate automation).
+cert_manager_enabled: false

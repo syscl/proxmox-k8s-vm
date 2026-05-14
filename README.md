@@ -11,12 +11,22 @@ Ansible inventory emitted by this stack.
 ```
 .
 ├── modules/
-│   ├── k8s-node/        # One Proxmox VM (CP or worker) from a cloud image + cloud-init
-│   └── k8s-cluster/     # A cluster = N control-plane VMs + M worker VMs (uses k8s-node)
-└── environments/
-    ├── dev/             # One OpenTofu root per environment (separate state)
-    ├── staging/
-    └── prod/
+│   ├── k8s-node/            # One Proxmox VM (CP or worker) from a cloud image + cloud-init
+│   └── k8s-cluster/         # A cluster = N control-plane VMs + M worker VMs (uses k8s-node)
+├── environments/
+│   ├── dev/                 # One OpenTofu root per environment (separate state)
+│   ├── staging/
+│   └── prod/
+├── kubespray/
+│   ├── run.sh               # Wrapper: dump tofu inventory + run ansible-playbook
+│   ├── group_vars/
+│   │   ├── all/all.yml      # SSH user, DNS, common settings
+│   │   └── k8s_cluster/
+│   │       ├── k8s-cluster.yml  # k8s version, CNI, runtime
+│   │       └── addons.yml       # helm, ingress, MetalLB, cert-manager
+│   └── inventory/            # Generated per-cluster inventories (git-ignored)
+└── scripts/
+    └── setup-proxmox.sh     # One-time PVE host setup (snippets, dirs)
 ```
 
 ### Why this shape
@@ -61,6 +71,17 @@ practice you change them independently.
    cloud image, and a datastore for VM disks (defaults to `local-lvm`).
 
 ## Bootstrap a cluster
+
+**Step 1 — one-time Proxmox host setup** (run as root on the PVE host):
+
+```bash
+bash scripts/setup-proxmox.sh
+```
+
+This enables the `snippets` content type on the `local` datastore and creates
+`/var/lib/vz/snippets/` if missing. Safe to re-run — skips steps already done.
+
+**Step 2 — provision:**
 
 ```bash
 cd environments/dev
@@ -158,11 +179,64 @@ To pin the image to a specific build, set `debian_image_url` to the dated path
 - The cloud-init `user_account` provisions the user `debian` (override with
   `ssh_username`) authorized via `ssh_public_keys`. No password is set.
 
-## Handing off to Kubespray
+## Installing Kubernetes with Kubespray
 
-The output `ansible_inventories[<cluster_name>]` is a YAML string with the
-groups Kubespray expects (`kube_control_plane`, `kube_node`, `etcd`,
-`k8s_cluster`). Persist it under your Kubespray inventory directory and run
-`ansible-playbook cluster.yml -i inventory.yaml` as usual. This repo is
-deliberately *not* coupled to Kubespray so you can swap it for `kubeadm` scripts,
-`k3sup`, Talos, etc.
+The `kubespray/` directory contains a wrapper script and group_vars that work
+with [Kubespray](https://github.com/kubernetes-sigs/kubespray). The wrapper
+reads the Ansible inventory directly from `tofu output` so you never manually
+write host files.
+
+**One-time setup:**
+
+```bash
+# Clone kubespray v2.31.0 next to this repo (or set KUBESPRAY_DIR to a custom path)
+git clone --branch v2.31.0 --depth 1 https://github.com/kubernetes-sigs/kubespray ../kubespray
+
+# Install uv (fast Python package manager) if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Install k8s on a provisioned cluster:**
+
+```bash
+./kubespray/run.sh dev k8s-dev-01
+```
+
+The script will:
+1. Create a virtualenv and install kubespray deps via `uv`
+2. Extract the inventory for `k8s-dev-01` from `environments/dev/` tofu state
+3. Symlink `kubespray/group_vars/` into the inventory directory
+4. Run `ansible-playbook cluster.yml` against the nodes
+
+You can pass extra ansible-playbook arguments after the cluster name:
+
+```bash
+./kubespray/run.sh dev k8s-dev-01 --tags=download         # download only
+./kubespray/run.sh dev k8s-dev-01 --limit=k8s-dev-01-cp-1 # single node
+./kubespray/run.sh prod k8s-prod-01 -v                    # verbose
+```
+
+### Customizing the cluster
+
+Edit the files under `kubespray/group_vars/`:
+
+| File | What to change |
+| --- | --- |
+| `all/all.yml` | SSH user, upstream DNS |
+| `k8s_cluster/k8s-cluster.yml` | k8s version (v1.35.0), CNI (cilium by default), container runtime |
+| `k8s_cluster/addons.yml` | Helm, ingress-nginx, MetalLB, cert-manager |
+
+### Full workflow (VM provisioning + k8s install)
+
+```bash
+bash scripts/setup-proxmox.sh                  # one-time PVE host setup
+cd environments/dev && tofu apply plan.bin      # provision VMs
+cd ../..
+./kubespray/run.sh dev k8s-dev-01              # install k8s
+```
+
+### Using a different k8s installer
+
+The tofu output `ansible_inventories[<cluster_name>]` is a standard YAML
+inventory. You can use it with any tool — kubeadm scripts, k3sup, Talos, etc.
+Kubespray is optional.

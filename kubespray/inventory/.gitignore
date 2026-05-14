@@ -1,0 +1,6 @@
+# Generated inventories (dumped from tofu output by run.sh)
+*/inventory.yaml
+*/all
+*/k8s_cluster
+!.gitkeep
+!.gitignore
