@@ -1,18 +1,15 @@
 # Kubernetes cluster configuration.
 # Only override values that differ from kubespray defaults.
 # See kubespray/inventory/sample/group_vars/k8s_cluster/k8s-cluster.yml for the full reference.
-
-kube_version: v1.35.4
+# NOTE: kube_version is intentionally not set here -- kubespray v2.31.0 defaults to v1.35.4.
 
 container_manager: containerd
 
 kube_network_plugin: cilium
 
-# Pod and service CIDR ranges (change if they overlap with your LAN).
 kube_pods_subnet: 10.233.64.0/18
 kube_service_addresses: 10.233.0.0/18
 
-# Cluster DNS domain.
 dns_domain: cluster.local
 
 metrics_server_enabled: true

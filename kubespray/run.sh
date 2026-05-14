@@ -12,7 +12,7 @@
 # Prerequisites:
 #   - tofu init already ran in environments/<env>
 #   - kubespray cloned next to this repo (../kubespray) or set KUBESPRAY_DIR
-#   - uv (https://docs.astral.sh/uv/) OR pip
+#   - uv (https://docs.astral.sh/uv/)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,14 +48,20 @@ info "Syncing virtualenv (python $PYTHON_VERSION)..."
 uv venv --python "$PYTHON_VERSION" "$VENV_DIR" --allow-existing
 uv pip install --python "$VENV_DIR/bin/python" -r "$KUBESPRAY_DIR/requirements.txt"
 
-# Activate the venv for ansible-playbook
 export PATH="$VENV_DIR/bin:$PATH"
 
-# --- Dump inventory from tofu ---
+# --- Build inventory directory (standard kubespray layout) ---
+# Per https://github.com/kubernetes-sigs/kubespray/blob/master/docs/getting_started/getting-started.md:
+#   1. Copy inventory/sample as the base (includes all default group_vars)
+#   2. Drop our hosts file in
+#   3. Overlay our group_vars customizations on top
 INVENTORY_DIR="$SCRIPT_DIR/inventory/$CLUSTER"
-INVENTORY_FILE="$INVENTORY_DIR/inventory.yaml"
-mkdir -p "$INVENTORY_DIR"
 
+info "Building inventory at $INVENTORY_DIR..."
+rm -rf "$INVENTORY_DIR"
+cp -rfp "$KUBESPRAY_DIR/inventory/sample" "$INVENTORY_DIR"
+
+# Extract hosts from tofu output
 info "Extracting inventory for cluster '$CLUSTER' from $ENV_DIR..."
 INVENTORY_JSON=$(cd "$ENV_DIR" && tofu output -json ansible_inventories 2>/dev/null)
 if [[ -z "$INVENTORY_JSON" ]]; then
@@ -64,17 +70,18 @@ fi
 
 echo "$INVENTORY_JSON" \
   | python3 -c "import json,sys; data=json.load(sys.stdin); k='$CLUSTER'; print(data[k]) if k in data else sys.exit('Cluster \"'+k+'\" not found. Available: '+', '.join(data.keys()))" \
-  > "$INVENTORY_FILE"
+  > "$INVENTORY_DIR/inventory.yaml"
 
-info "Inventory written to $INVENTORY_FILE"
+info "Hosts written to $INVENTORY_DIR/inventory.yaml"
 
-# --- Collect extra-vars from group_vars files ---
-# Using -e @file gives highest Ansible precedence, overriding kubespray defaults.
-EXTRA_VARS_FILES=()
+# Overlay our group_vars on top of kubespray defaults
 for yml in "$SCRIPT_DIR/group_vars"/*/*.yml; do
     [[ -f "$yml" ]] || continue
-    EXTRA_VARS_FILES+=("-e" "@$yml")
-    info "Loading vars from $(basename "$(dirname "$yml")")/$(basename "$yml")"
+    rel="${yml#"$SCRIPT_DIR/group_vars/"}"
+    target="$INVENTORY_DIR/group_vars/$rel"
+    mkdir -p "$(dirname "$target")"
+    cp "$yml" "$target"
+    info "Override: group_vars/$rel"
 done
 
 # --- SSH key detection ---
@@ -93,14 +100,12 @@ info "Kubespray dir: $KUBESPRAY_DIR"
 info "SSH key: $SSH_KEY"
 echo ""
 
-ANSIBLE_ROLES_PATH="$KUBESPRAY_DIR/roles" \
-ANSIBLE_COLLECTIONS_PATH="$KUBESPRAY_DIR/collections" \
-ANSIBLE_HOST_KEY_CHECKING=False \
+# Point -i at the directory so Ansible picks up group_vars/ automatically.
+# https://github.com/kubernetes-sigs/kubespray/blob/master/docs/getting_started/getting-started.md
 ansible-playbook "$KUBESPRAY_DIR/cluster.yml" \
-    -i "$INVENTORY_FILE" \
+    -i "$INVENTORY_DIR/" \
     -u debian \
     --private-key "$SSH_KEY" \
     --become \
     --flush-cache \
-    "${EXTRA_VARS_FILES[@]}" \
     "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
