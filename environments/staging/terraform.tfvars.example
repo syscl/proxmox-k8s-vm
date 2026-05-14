@@ -1,0 +1,57 @@
+############################
+# Environment
+############################
+environment = "staging"
+
+############################
+# Proxmox connection
+############################
+proxmox_endpoint     = "https://pve.lab.example.com:8006/"
+proxmox_api_token    = "tofu@pve!provisioner=REPLACE-WITH-SECRET"
+proxmox_insecure     = true
+proxmox_ssh_username = "root"
+proxmox_node         = "pve1"
+
+############################
+# Cloud image
+############################
+image_datastore_id = "local"
+datastore_id       = "local-lvm"
+
+############################
+# Common cluster defaults
+############################
+ssh_username = "debian"
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... your-key-here",
+]
+
+############################
+# Clusters in this environment
+############################
+clusters = {
+  "k8s-stg-01" = {
+    proxmox_node = "pve1"
+    vm_id_base   = 2100
+
+    control_plane = {
+      count     = 3
+      cpu_cores = 2
+      memory_mb = 4096
+      disk_gb   = 40
+    }
+
+    workers = {
+      count     = 3
+      cpu_cores = 4
+      memory_mb = 8192
+      disk_gb   = 100
+    }
+
+    network = {
+      bridge      = "vmbr0"
+      dns_servers = ["1.1.1.1", "8.8.8.8"]
+      dns_domain  = "stg.lab.local"
+    }
+  }
+}

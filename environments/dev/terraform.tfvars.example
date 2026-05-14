@@ -1,0 +1,63 @@
+############################
+# Environment
+############################
+environment = "dev"
+
+############################
+# Proxmox connection
+############################
+proxmox_endpoint     = "https://pve.lab.example.com:8006/"
+proxmox_api_token    = "tofu@pve!provisioner=REPLACE-WITH-SECRET"
+proxmox_insecure     = true
+proxmox_ssh_username = "root"
+proxmox_node         = "pve1"
+
+############################
+# Cloud image (optional override)
+############################
+# debian_image_url      = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+# debian_image_checksum = "REPLACE_WITH_SHA256_FROM_DEBIAN_MIRROR"
+image_datastore_id = "local"
+datastore_id       = "local-lvm"
+
+############################
+# Common cluster defaults
+############################
+ssh_username = "debian"
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... your-key-here",
+]
+
+############################
+# Clusters in this environment
+############################
+clusters = {
+  "k8s-dev-01" = {
+    proxmox_node = "pve1"
+    vm_id_base   = 1100
+
+    control_plane = {
+      count     = 1
+      cpu_cores = 2
+      memory_mb = 4096
+      disk_gb   = 40
+    }
+
+    workers = {
+      count     = 2
+      cpu_cores = 4
+      memory_mb = 8192
+      disk_gb   = 80
+    }
+
+    network = {
+      bridge      = "vmbr0"
+      dns_servers = ["1.1.1.1", "8.8.8.8"]
+      dns_domain  = "dev.lab.local"
+      # gateway / static IPs are optional; leave empty for DHCP
+    }
+  }
+
+  # Add more clusters here as needed:
+  # "k8s-dev-02" = { ... }
+}

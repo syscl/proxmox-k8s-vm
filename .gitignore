@@ -1,0 +1,29 @@
+# OpenTofu / Terraform
+.terraform/
+.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Local override files (real secrets / per-env values)
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI plan / config artifacts
+.terraformrc
+terraform.rc
+.tofu/
+.tofurc
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
