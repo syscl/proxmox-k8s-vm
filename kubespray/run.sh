@@ -68,14 +68,13 @@ echo "$INVENTORY_JSON" \
 
 info "Inventory written to $INVENTORY_FILE"
 
-# --- Copy group_vars into inventory dir so Kubespray picks them up ---
-# Using cp instead of symlinks to avoid relative path resolution issues.
-for gv_dir in "$SCRIPT_DIR/group_vars"/*/; do
-    gv_name="$(basename "$gv_dir")"
-    target="$INVENTORY_DIR/$gv_name"
-    rm -rf "$target"
-    cp -r "$gv_dir" "$target"
-    info "Copied group_vars/$gv_name -> $target"
+# --- Collect extra-vars from group_vars files ---
+# Using -e @file gives highest Ansible precedence, overriding kubespray defaults.
+EXTRA_VARS_FILES=()
+for yml in "$SCRIPT_DIR/group_vars"/*/*.yml; do
+    [[ -f "$yml" ]] || continue
+    EXTRA_VARS_FILES+=("-e" "@$yml")
+    info "Loading vars from $(basename "$(dirname "$yml")")/$(basename "$yml")"
 done
 
 # --- SSH key detection ---
@@ -102,4 +101,6 @@ ansible-playbook "$KUBESPRAY_DIR/cluster.yml" \
     -u debian \
     --private-key "$SSH_KEY" \
     --become \
+    --flush-cache \
+    "${EXTRA_VARS_FILES[@]}" \
     "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
