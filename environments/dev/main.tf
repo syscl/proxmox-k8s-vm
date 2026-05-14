@@ -49,9 +49,9 @@ module "cluster" {
   workers       = each.value.workers
   network       = each.value.network
 
-  datastore_id      = coalesce(each.value.datastore_id, var.datastore_id)
-  ci_datastore_id   = coalesce(each.value.ci_datastore_id, var.ci_datastore_id, var.datastore_id)
-  user_data_file_id = proxmox_virtual_environment_file.k8s_node_user_data.id
+  datastore_id        = coalesce(each.value.datastore_id, var.datastore_id)
+  ci_datastore_id     = coalesce(each.value.ci_datastore_id, var.ci_datastore_id, var.datastore_id)
+  vendor_data_file_id = proxmox_virtual_environment_file.k8s_node_user_data.id
 
   ssh_username    = var.ssh_username
   ssh_public_keys = var.ssh_public_keys

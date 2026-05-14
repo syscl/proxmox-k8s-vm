@@ -128,8 +128,8 @@ variable "ci_datastore_id" {
   default     = null
 }
 
-variable "user_data_file_id" {
-  description = "File ID of a cloud-init user-data snippet (proxmox_virtual_environment_file). null = no user-data."
+variable "vendor_data_file_id" {
+  description = "File ID of a cloud-init vendor-data snippet (proxmox_virtual_environment_file). Runs alongside Proxmox-managed user-data so it does not conflict with user/key setup."
   type        = string
   default     = null
 }

@@ -49,8 +49,8 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   initialization {
-    datastore_id      = var.ci_datastore_id
-    user_data_file_id = var.user_data_file_id
+    datastore_id        = var.ci_datastore_id
+    vendor_data_file_id = var.vendor_data_file_id
 
     dns {
       servers = length(var.dns_servers) > 0 ? var.dns_servers : null
