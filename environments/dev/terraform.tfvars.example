@@ -38,16 +38,16 @@ clusters = {
 
     control_plane = {
       count     = 1
-      cpu_cores = 2
-      memory_mb = 4096
-      disk_gb   = 40
+      cpu_cores = 2      # 2 vCPU minimum required by kubeadm
+      memory_mb = 2048
+      disk_gb   = 10
     }
 
     workers = {
       count     = 2
-      cpu_cores = 4
-      memory_mb = 8192
-      disk_gb   = 80
+      cpu_cores = 1
+      memory_mb = 2048
+      disk_gb   = 10
     }
 
     network = {
