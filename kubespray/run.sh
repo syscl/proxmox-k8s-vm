@@ -68,14 +68,14 @@ echo "$INVENTORY_JSON" \
 
 info "Inventory written to $INVENTORY_FILE"
 
-# --- Symlink group_vars into inventory dir so Kubespray picks them up ---
+# --- Copy group_vars into inventory dir so Kubespray picks them up ---
+# Using cp instead of symlinks to avoid relative path resolution issues.
 for gv_dir in "$SCRIPT_DIR/group_vars"/*/; do
     gv_name="$(basename "$gv_dir")"
     target="$INVENTORY_DIR/$gv_name"
-    if [[ ! -L "$target" && ! -d "$target" ]]; then
-        ln -sf "../../group_vars/$gv_name" "$target"
-        info "Linked group_vars/$gv_name -> $target"
-    fi
+    rm -rf "$target"
+    cp -r "$gv_dir" "$target"
+    info "Copied group_vars/$gv_name -> $target"
 done
 
 # --- SSH key detection ---
