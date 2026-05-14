@@ -94,6 +94,8 @@ info "Kubespray dir: $KUBESPRAY_DIR"
 info "SSH key: $SSH_KEY"
 echo ""
 
+ANSIBLE_ROLES_PATH="$KUBESPRAY_DIR/roles" \
+ANSIBLE_COLLECTIONS_PATH="$KUBESPRAY_DIR/collections" \
 ansible-playbook "$KUBESPRAY_DIR/cluster.yml" \
     -i "$INVENTORY_FILE" \
     --private-key "$SSH_KEY" \
