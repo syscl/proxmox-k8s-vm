@@ -96,8 +96,10 @@ echo ""
 
 ANSIBLE_ROLES_PATH="$KUBESPRAY_DIR/roles" \
 ANSIBLE_COLLECTIONS_PATH="$KUBESPRAY_DIR/collections" \
+ANSIBLE_HOST_KEY_CHECKING=False \
 ansible-playbook "$KUBESPRAY_DIR/cluster.yml" \
     -i "$INVENTORY_FILE" \
+    -u debian \
     --private-key "$SSH_KEY" \
     --become \
     "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
